@@ -1,0 +1,6 @@
+#grid{
+    -fx-background-repeat: stretch;
+    -fx-background-size: 559 356;
+    -fx-background-position: center center;
+    -fx-effect: dropshadow(three-pass-box, green, 100, 0.5, 0, 0);
+}
