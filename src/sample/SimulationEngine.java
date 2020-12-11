@@ -14,10 +14,9 @@ public class SimulationEngine {
     private void placeAnimals(int startAnimalNumber, int width, int height, int startEnergy) {
         Random rand = new Random();
         for (int i = 0; i < startAnimalNumber; i++) {
-            Animal animal;
-            do {
-                animal = new Animal(worldMap, new Vector2d(rand.nextInt(width), rand.nextInt(height)), startEnergy);
-            } while (!worldMap.place(animal));
+            Animal animal = new Animal(worldMap, new Vector2d(rand.nextInt(width), rand.nextInt(height)), startEnergy);
+            worldMap.place(animal);
+
         }
     }
 

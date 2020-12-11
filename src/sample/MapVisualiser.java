@@ -24,10 +24,11 @@ public class MapVisualiser extends Application {
 
     private GridPane grid;
     private Image grassImage, groundImage, animalImage;
-    private final int width = 80;
-    private final int height = 40;
-    private SimulationEngine simulationEngine = new SimulationEngine(width, height, 40, 15, 0.2,6, 1);
-    private final HashMap<Vector2d, ArrayList<IMapElement>> objectsOnMap = simulationEngine.worldMap.objectsOnMap;
+    private final int width = 30;
+    private final int height = 20;
+    private SimulationEngine simulationEngine = new SimulationEngine(width, height, 100, 15, 0.2,10, 1);
+    private final HashMap<Vector2d, ArrayList<Animal>> animalsOnMap = simulationEngine.worldMap.animalsOnMap;
+    private final HashMap<Vector2d, Grass> grassOnMap = simulationEngine.worldMap.grassesOnMap;
     private int currentDay = 0;
 
 
@@ -46,6 +47,8 @@ public class MapVisualiser extends Application {
 
         Button button = new Button("change day");
         Label dayNumberLabel = new Label("day 0");
+        Label animalArrayLength = new Label("animals 0");
+        Label grassArrayLength = new Label("grass number 0");
         grid = new GridPane();
         grid.setHgap(1);
         grid.setVgap(1);
@@ -58,12 +61,14 @@ public class MapVisualiser extends Application {
         {
             currentDay += 1;
             dayNumberLabel.setText("day " + currentDay);
+            animalArrayLength.setText("animals " + simulationEngine.worldMap.animalsNumber);
+            grassArrayLength.setText("grass number " + grassOnMap.size());
             resetOccupiedFields();
             simulationEngine.day();
             setOccupiedFields();
         });
         VBox vBox = new VBox();
-        vBox.getChildren().addAll(button,dayNumberLabel);
+        vBox.getChildren().addAll(button,dayNumberLabel, animalArrayLength, grassArrayLength);
         borderPane.setBottom(vBox);
         Scene scene = new Scene(borderPane);
         fillGrid();
@@ -94,7 +99,15 @@ public class MapVisualiser extends Application {
 
     private void resetOccupiedFields()
     {
-        Iterator iterator = objectsOnMap.entrySet().iterator();
+        for(Vector2d position: simulationEngine.worldMap.eatenGrasses)
+        {
+            ImageView selectedImage = new ImageView();
+            selectedImage.setImage(groundImage);
+            GridPane.setConstraints(selectedImage,position.x,position.y);
+            grid.getChildren().addAll(selectedImage);
+        }
+
+        Iterator iterator = animalsOnMap.entrySet().iterator();
         while(iterator.hasNext())
         {
             Map.Entry mapElement = (Map.Entry) iterator.next();
@@ -108,37 +121,24 @@ public class MapVisualiser extends Application {
 
     private void setOccupiedFields()
     {
-        Iterator iterator = objectsOnMap.entrySet().iterator();
-        Vector2d position = null;
-        boolean isAnimalInList;
-        while(iterator.hasNext())
+        for(Vector2d position: simulationEngine.worldMap.addedGrasses)
+        {
+            ImageView selectedImage = new ImageView();
+            selectedImage.setImage(grassImage);
+            GridPane.setConstraints(selectedImage,position.x,position.y);
+            grid.getChildren().addAll(selectedImage);
+        }
+
+        Iterator iterator = animalsOnMap.entrySet().iterator();
+        while (iterator.hasNext())
         {
             Map.Entry mapElement = (Map.Entry) iterator.next();
-            ArrayList<IMapElement> array = (ArrayList<IMapElement>) mapElement.getValue();
-            position = (Vector2d) mapElement.getKey();
-
-            if(array.size() >0 )
-            {
-                isAnimalInList = false;
-                for(IMapElement iMapElement: array)
-                {
-                    if(iMapElement.getClass() == Animal.class)
-                    {
-                        isAnimalInList = true;
-                        ImageView selectedImage = new ImageView();
-                        selectedImage.setImage(animalImage);
-                        GridPane.setConstraints(selectedImage,position.x,position.y);
-                        grid.getChildren().addAll(selectedImage);
-                    }
-                }
-                if(!isAnimalInList)
-                {
-                    ImageView selectedImage = new ImageView();
-                    selectedImage.setImage(grassImage);
-                    GridPane.setConstraints(selectedImage,position.x,position.y);
-                    grid.getChildren().addAll(selectedImage);
-                }
-            }
+            Vector2d position = (Vector2d) mapElement.getKey();
+            ImageView selectedImage = new ImageView();
+            selectedImage.setImage(animalImage);
+            GridPane.setConstraints(selectedImage,position.x,position.y);
+            grid.getChildren().addAll(selectedImage);
         }
+
     }
 }
