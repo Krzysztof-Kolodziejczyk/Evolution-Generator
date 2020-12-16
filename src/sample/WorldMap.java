@@ -2,24 +2,34 @@ package sample;
 
 import java.util.*;
 
-public class WorldMap {
+public class WorldMap implements IPositionChangeObserver{
 
     public final int height, width;
     public HashMap<Vector2d, ArrayList<Animal>> animalsOnMap;
+    public ArrayList<Vector2d> animalsPositions;
     public HashMap<Vector2d, Grass> grassesOnMap;
     public ArrayList<Vector2d> eatenGrasses;
     public ArrayList<Vector2d> addedGrasses;
-    private int dayEnergyCost;
-    private int plantEnergy;
+    private final int dayEnergyCost;
+    private final int plantEnergy;
     private Vector2d jungleLowerLeft;
     private int jungleHeight, jungleWidth;
     public int animalsNumber;
+    public int averageSurvivedDaysNumber;
+    private int deadAnimalsNumber;
+    private int survivedDaysByDeadAnimals;
+    private int startEnergy;
 
-    public WorldMap(int width, int height, int dayEnergyCost, int plantEnergy, double jungleRatio) {
+    public WorldMap(int width, int height, int dayEnergyCost, int plantEnergy, int jungleRatio, int startEnergy) {
         this.height = height;
         this.width = width;
         this.dayEnergyCost = dayEnergyCost;
         this.plantEnergy = plantEnergy;
+        this.averageSurvivedDaysNumber = 0;
+        this.deadAnimalsNumber = 0;
+        survivedDaysByDeadAnimals = 0;
+        this.animalsPositions = new ArrayList<>();
+        this.startEnergy = startEnergy;
         setJunglePosition(jungleRatio);
 
         animalsOnMap = new HashMap<>();
@@ -30,31 +40,49 @@ public class WorldMap {
 
     }
 
-    protected void addElementToAnimalMap(Vector2d position, Animal mapElement) {
+    private void addElementToAnimalMap(Vector2d position, Animal animal) {
         if (animalsOnMap.get(position) == null) {
             animalsOnMap.put(position, new ArrayList<>());
-            animalsOnMap.get(position).add(mapElement);
+            animalsOnMap.get(position).add(animal);
         } else {
-            animalsOnMap.get(position).add(mapElement);
+            animalsOnMap.get(position).add(animal);
         }
     }
 
 
     public void place(Animal animal) {
+        if(animalsOnMap.get(animal.getPosition()) == null)
+        {
+            animalsPositions.add(animal.getPosition());
+        }
         addElementToAnimalMap(animal.getPosition(), animal);
         animalsNumber += 1;
+        animal.addObserver(this);
     }
 
 
     public void positionChanged(Vector2d oldPosition, Vector2d newPosition, Animal animal) {
         ArrayList<Animal> objects = animalsOnMap.get(oldPosition);
         if (objects.size() == 1) {
+            if(animalsOnMap.get(newPosition) == null || animalsOnMap.get(newPosition).size() == 0)
+            {
+                animalsPositions.add(newPosition);
+            }
             addElementToAnimalMap(newPosition, animal);
             animalsOnMap.remove(oldPosition);
+            if(animalsOnMap.get(oldPosition) == null)
+            {
+                animalsPositions.remove(oldPosition);
+            }
+
         } else if (objects.size() > 1) {
             for (Animal element : objects) {
-                if (element.getClass() == Animal.class && element.equals(animal)) {
+                if (element.equals(animal)) {
                     objects.remove(element);
+                    if(animalsOnMap.get(newPosition) == null)
+                    {
+                        animalsPositions.add(newPosition);
+                    }
                     addElementToAnimalMap(newPosition, element);
                     return;
                 }
@@ -65,48 +93,34 @@ public class WorldMap {
     public void dayCycle() {
         addedGrasses = new ArrayList<>();
         placeGrasses();
-        ArrayList<Vector2d> objectsPositions = new ArrayList<>();
-
-        Iterator iterator = animalsOnMap.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry mapElement = (Map.Entry) iterator.next();
-            objectsPositions.add((Vector2d) mapElement.getKey());
-        }
 
         //przejście po wszystkich zwierzętach i weryfikacja zdarzeń (jedzenie, rozmnażanie, śmierć)
         eatenGrasses = new ArrayList<>();
-        for (Vector2d position : objectsPositions) {
+        ArrayList<Vector2d> newAnimalsPositions = new ArrayList<>(animalsPositions);
+
+        for(Vector2d position: newAnimalsPositions)
+        {
             eat(position);
             death(position);
-            multiplication(position);
+            copulation(position);
         }
 
         // ruch zwierząt
-        iterator = animalsOnMap.entrySet().iterator();
-        objectsPositions = new ArrayList<>();
-        while (iterator.hasNext()) {
-            Map.Entry mapElement = (Map.Entry) iterator.next();
-            objectsPositions.add((Vector2d) mapElement.getKey());
-        }
-
-
-        for (Vector2d position : objectsPositions)
+        newAnimalsPositions = new ArrayList<>(animalsPositions);
+        for (Vector2d position: newAnimalsPositions)
         {
-            ArrayList<Animal> copiedAnimalList = new ArrayList<>(animalsOnMap.get(position));
-            for(Animal animal: copiedAnimalList)
+            ArrayList<Animal> animalListInHashMap = new ArrayList<>(animalsOnMap.get(position));
+            for(Animal animal: animalListInHashMap)
             {
-                Vector2d oldPosition = animal.getPosition();
                 animal.move();
-                Vector2d newPosition = animal.getPosition();
-                positionChanged(oldPosition,newPosition,animal);
                 animal.energy -= dayEnergyCost;
+                animal.survivedDaysNumber += 1;
             }
-
         }
 
     }
 
-    private Animal getMaximumEnergyAnimal(Vector2d position) {
+    public Animal getMaximumEnergyAnimal(Vector2d position) {
         ArrayList<Animal> animals = animalsOnMap.get(position);
         int max = -1;
         Animal resultAnimal = null;
@@ -158,6 +172,8 @@ public class WorldMap {
             {
                 deadAnimals.add(animal);
                 animalsNumber -= 1;
+                survivedDaysByDeadAnimals += animal.survivedDaysNumber;
+                deadAnimalsNumber += 1;
             }
         }
 
@@ -167,40 +183,51 @@ public class WorldMap {
         }
         if(animals.size() == 0)
         {
+            animalsPositions.remove(position);
             animalsOnMap.remove(position);
+        }
+        if(deadAnimalsNumber > 0)
+        {
+            averageSurvivedDaysNumber = survivedDaysByDeadAnimals/deadAnimalsNumber;
         }
     }
 
-    private void multiplication(Vector2d position)
+    private void copulation(Vector2d position)
     {
         if(animalsOnMap.get(position) != null && animalsOnMap.get(position).size() > 1)
         {
             Animal maxEnergyAnimal = getMaximumEnergyAnimal(position);
             Animal secondMaxEnergyAnimal = getSecondMaxEnergyAnimal(position,maxEnergyAnimal);
-
-            // utrata energi
-            int lostEnergy1 = (int) (0.25 * maxEnergyAnimal.energy);
-            int lostEnergy2 = (int)( 0.25 * secondMaxEnergyAnimal.energy);
-            maxEnergyAnimal.energy -= lostEnergy1;
-            secondMaxEnergyAnimal.energy -= lostEnergy2;
-
-            // znalezienie miejsca dla potomka
-            Vector2d parentPosition = maxEnergyAnimal.getPosition();
-            Vector2d childPosition = findPlaceForChild(parentPosition);
-
-            if(childPosition != null)
+            assert secondMaxEnergyAnimal != null;
+            if(secondMaxEnergyAnimal.energy >= secondMaxEnergyAnimal.startEnergy/2)
             {
-                Animal animal = new Animal(childPosition, lostEnergy1 + lostEnergy2, resultGenoTypeMaker(maxEnergyAnimal, secondMaxEnergyAnimal), this);
-                place(animal);
+
+                // znalezienie miejsca dla potomka
+                Vector2d parentPosition = maxEnergyAnimal.getPosition();
+                Vector2d childPosition = findPlaceForChild(parentPosition);
+
+                if(childPosition != null)
+                {
+                    // utrata energi
+                    int lostEnergy1 = (int) (0.25 * maxEnergyAnimal.energy);
+                    int lostEnergy2 = (int)( 0.25 * secondMaxEnergyAnimal.energy);
+                    maxEnergyAnimal.energy -= lostEnergy1;
+                    secondMaxEnergyAnimal.energy -= lostEnergy2;
+                    Animal animal = new Animal(childPosition, lostEnergy1 + lostEnergy2, resultGenoTypeMaker(maxEnergyAnimal, secondMaxEnergyAnimal), this, startEnergy);
+                    place(animal);
+                    maxEnergyAnimal.childNumber += 1;
+                    secondMaxEnergyAnimal.childNumber += 1;
+                }
             }
+
         }
 
     }
 
-    private void setJunglePosition(double jungleRatio) {
+    private void setJunglePosition(int jungleRatio) {
 
-        jungleHeight = (int) (jungleRatio * height);
-        jungleWidth = (int) (jungleRatio * width);
+        jungleHeight = (int) (jungleRatio * height/100);
+        jungleWidth = (int) (jungleRatio * width/100);
 
         jungleLowerLeft = new Vector2d(width / 2 - jungleWidth / 2, height / 2 - jungleHeight / 2);
     }
@@ -238,21 +265,23 @@ public class WorldMap {
 
     private Vector2d findPlaceForChild(Vector2d parentPosition)
     {
-        Animal animal;
-        for(int i=0; i<8; i++)
+        if(animalsOnMap.get(new Vector2d(parentPosition.x, (parentPosition.y + 1)%height)) == null)
         {
-            animal = new Animal(parentPosition,i,this);
-            animal.move();
-            if(grassesOnMap.get(animal.getPosition()) == null && animalsOnMap.get(animal.getPosition()) == null)
-            {
-                return animal.getPosition();
-            }
+            return new Vector2d(parentPosition.x, (parentPosition.y + 1)%height);
         }
-        // brak miejsca
+        if(animalsOnMap.get(new Vector2d((parentPosition.x+1)%width, (parentPosition.y + 1)%height)) == null)
+        {
+            return new Vector2d((parentPosition.x+1)%width, (parentPosition.y + 1)%height);
+        }
+        if(animalsOnMap.get(new Vector2d((parentPosition.x+1)%width, parentPosition.y)) == null)
+        {
+            return new Vector2d((parentPosition.x+1)%width, parentPosition.y);
+        }
+
         return null;
     }
 
-    private int[] genotypeSeparator(int [] genes)
+    private int[] genotypeSeparator()
     {
         Random rand = new Random();
         int position;
@@ -286,7 +315,7 @@ public class WorldMap {
 
         for(int i=0; i<32; i++)
         {
-            if(genesPosB[i] != 2)
+            if(genesPosA[i] != 2)
             {
                 newGenotype[currentPosition] = genesA[i];
                 currentPosition += 1;
@@ -329,6 +358,45 @@ public class WorldMap {
 
     private int[] resultGenoTypeMaker(Animal animal1, Animal animal2)
     {
-        return genotypeMaker(genotypeSeparator(animal1.animalGene), genotypeSeparator(animal2.animalGene), animal1.animalGene, animal2.animalGene);
+        return genotypeMaker(genotypeSeparator(), genotypeSeparator(), animal1.animalGene, animal2.animalGene);
     }
+
+    public int getAverageEnergyLevel()
+    {
+
+        int avergeEnergyLevel = 0;
+        for(Vector2d position: animalsPositions)
+        {
+            for(Animal animal: animalsOnMap.get(position))
+            {
+                avergeEnergyLevel += animal.energy;
+            }
+        }
+        if(animalsNumber > 0)
+        {
+            return avergeEnergyLevel/animalsNumber;
+        }
+        return 0;
+    }
+
+    public int getAverageAnimalChildNumber()
+    {
+
+        int averageChildNumber = 0;
+
+        for(Vector2d position: animalsPositions)
+        {
+            for(Animal animal: animalsOnMap.get(position))
+            {
+                averageChildNumber += animal.childNumber;
+            }
+        }
+
+        if(animalsNumber > 0)
+        {
+            return averageChildNumber/animalsNumber;
+        }
+        return 0;
+    }
+
 }

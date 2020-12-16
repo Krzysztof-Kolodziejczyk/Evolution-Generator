@@ -1,144 +1,126 @@
 package sample;
 
-import javafx.application.Application;
-import javafx.fxml.FXMLLoader;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
-import javafx.scene.Parent;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
-import java.io.FileInputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 
-public class MapVisualiser extends Application {
+import java.util.Timer;
+import java.util.TimerTask;
 
-    private GridPane grid;
-    private Image grassImage, groundImage, animalImage;
-    private final int width = 30;
-    private final int height = 20;
-    private SimulationEngine simulationEngine = new SimulationEngine(width, height, 100, 15, 0.2,10, 1);
-    private final HashMap<Vector2d, ArrayList<Animal>> animalsOnMap = simulationEngine.worldMap.animalsOnMap;
-    private final HashMap<Vector2d, Grass> grassOnMap = simulationEngine.worldMap.grassesOnMap;
+public class MapVisualiser {
+
+    private final GridPane grid;
     private int currentDay = 0;
+    private TimerTask timerTask;
+    private PaintUpdate paintUpdate;
+    private int delay;
 
+    public MapVisualiser(int width, int height, int delay, int startEnergy, int plantEnergy, int jungleRatio, int startAnimalNumber, int dayEnergyCost)
+    {
 
-    public static void main(String[] args) {
-        launch(args);
-    }
-
-
-
-    @Override
-    public void start(Stage primaryStage) throws Exception{
-
-        grassImage = new Image(new FileInputStream("/Users/user/Desktop/grass.jpg"));
-        groundImage = new Image(new FileInputStream("/Users/user/Desktop/ground.jpg"));
-        animalImage = new Image(new FileInputStream("/Users/user/Desktop/animal.jpg"));
-
-        Button button = new Button("change day");
+        Stage primaryStage = new Stage();
+        Button startButton = new Button("start Simulation");
+        Button stopButton = new Button("stop Simulation");
+        Button restartButton = new Button("Restart Simulation");
         Label dayNumberLabel = new Label("day 0");
+        dayNumberLabel.setFont(new Font("Arial", 30));
         Label animalArrayLength = new Label("animals 0");
         Label grassArrayLength = new Label("grass number 0");
+        Label averageEnergyLevelLabel = new Label("average animal energy 0");
+        Label averageAnimalLiveLengthLabel = new Label("average animal live length 0");
+        Label averageChildNumberLabel = new Label("average child number 0");
+
+        this.delay = delay;
+
         grid = new GridPane();
+        paintUpdate = new PaintUpdate(width, height, grid, startEnergy, plantEnergy, jungleRatio, startAnimalNumber, dayEnergyCost);
         grid.setHgap(1);
         grid.setVgap(1);
         grid.setPadding(new Insets(15));
         BorderPane borderPane = new BorderPane();
-        borderPane.setTop(grid);
+        borderPane.setCenter(grid);
+
+        // creating timer
+        Timer myTimer = new Timer();
 
 
-        button.setOnAction(e ->
+        startButton.setOnAction(e ->
         {
-            currentDay += 1;
-            dayNumberLabel.setText("day " + currentDay);
-            animalArrayLength.setText("animals " + simulationEngine.worldMap.animalsNumber);
-            grassArrayLength.setText("grass number " + grassOnMap.size());
-            resetOccupiedFields();
-            simulationEngine.day();
-            setOccupiedFields();
+            timerCycle(dayNumberLabel, animalArrayLength, grassArrayLength, averageEnergyLevelLabel, averageAnimalLiveLengthLabel, averageChildNumberLabel, myTimer);
         });
-        VBox vBox = new VBox();
-        vBox.getChildren().addAll(button,dayNumberLabel, animalArrayLength, grassArrayLength);
-        borderPane.setBottom(vBox);
+
+        stopButton.setOnAction(e -> {
+            timerTask.cancel();
+        });
+
+        restartButton.setOnAction(e ->
+        {
+            paintUpdate = new PaintUpdate(width,height,grid, startEnergy, plantEnergy, jungleRatio, startAnimalNumber, dayEnergyCost);
+            currentDay = 0;
+        });
+
+        // top Panel to render day number
+        VBox vBoxTop = new VBox();
+        vBoxTop.setPrefWidth(200);
+        vBoxTop.setPrefHeight(60);
+        vBoxTop.setAlignment(Pos.CENTER);
+        vBoxTop.getChildren().addAll(dayNumberLabel);
+        borderPane.setTop(vBoxTop);
+
+        // left Panel to change Days
+        VBox vBoxLeft = new VBox();
+        vBoxLeft.setPrefWidth(200);
+        vBoxLeft.setAlignment(Pos.TOP_CENTER);
+        vBoxLeft.getChildren().addAll(startButton, stopButton, restartButton);
+        borderPane.setLeft(vBoxLeft);
+
+
+        // right Panel to render Statistics
+        VBox vBoxRight = new VBox();
+        vBoxRight.setPrefWidth(200);
+        vBoxRight.setAlignment(Pos.TOP_CENTER);
+        vBoxRight.getChildren().addAll(animalArrayLength, grassArrayLength, averageAnimalLiveLengthLabel, averageChildNumberLabel, averageEnergyLevelLabel);
+        borderPane.setRight(vBoxRight);
+
         Scene scene = new Scene(borderPane);
-        fillGrid();
+        paintUpdate.fillGrid();
 
         grid.setId("grid");
         scene.getStylesheets().addAll(this.getClass().getResource("backgroundGrid.css").toExternalForm());
+
         primaryStage.setTitle("Evolution Generator");
         primaryStage.setScene(scene);
         primaryStage.show();
 
     }
 
-
-    private void fillGrid()
-    {
-
-        for(int i=0; i<width; i++)
-        {
-            for(int j=0; j<height; j++)
-            {
-                ImageView selectedImage = new ImageView();
-                selectedImage.setImage(groundImage);
-                GridPane.setConstraints(selectedImage,i,j);
-                grid.getChildren().addAll(selectedImage);
+    private void timerCycle(Label dayNumberLabel, Label animalArrayLength, Label grassArrayLength, Label averageEnergyLevelLabel, Label averageAnimalLiveLengthLabel, Label averageChildNumberLabel, Timer myTimer) {
+        timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                Platform.runLater(() -> {
+                    currentDay += 1;
+                    dayNumberLabel.setText("day " + currentDay);
+                    animalArrayLength.setText("animals " + paintUpdate.simulationEngine.worldMap.animalsNumber);
+                    grassArrayLength.setText("grass  " + paintUpdate.simulationEngine.worldMap.grassesOnMap.size());
+                    averageAnimalLiveLengthLabel.setText("average animal live length " + paintUpdate.simulationEngine.worldMap.averageSurvivedDaysNumber);
+                    averageChildNumberLabel.setText("average child number " + paintUpdate.simulationEngine.worldMap.getAverageAnimalChildNumber());
+                    averageEnergyLevelLabel.setText("average animal energy " + paintUpdate.simulationEngine.worldMap.getAverageEnergyLevel());
+                    paintUpdate.changeAnimalsLabelToSand();
+                    paintUpdate.simulationEngine.day();
+                    paintUpdate.setOccupiedFields();
+                    paintUpdate.placeAnimalsOnMap();
+                });
             }
-        }
-    }
-
-    private void resetOccupiedFields()
-    {
-        for(Vector2d position: simulationEngine.worldMap.eatenGrasses)
-        {
-            ImageView selectedImage = new ImageView();
-            selectedImage.setImage(groundImage);
-            GridPane.setConstraints(selectedImage,position.x,position.y);
-            grid.getChildren().addAll(selectedImage);
-        }
-
-        Iterator iterator = animalsOnMap.entrySet().iterator();
-        while(iterator.hasNext())
-        {
-            Map.Entry mapElement = (Map.Entry) iterator.next();
-            Vector2d position = (Vector2d) mapElement.getKey();
-            ImageView selectedImage = new ImageView();
-            selectedImage.setImage(groundImage);
-            GridPane.setConstraints(selectedImage,position.x,position.y);
-            grid.getChildren().addAll(selectedImage);
-        }
-    }
-
-    private void setOccupiedFields()
-    {
-        for(Vector2d position: simulationEngine.worldMap.addedGrasses)
-        {
-            ImageView selectedImage = new ImageView();
-            selectedImage.setImage(grassImage);
-            GridPane.setConstraints(selectedImage,position.x,position.y);
-            grid.getChildren().addAll(selectedImage);
-        }
-
-        Iterator iterator = animalsOnMap.entrySet().iterator();
-        while (iterator.hasNext())
-        {
-            Map.Entry mapElement = (Map.Entry) iterator.next();
-            Vector2d position = (Vector2d) mapElement.getKey();
-            ImageView selectedImage = new ImageView();
-            selectedImage.setImage(animalImage);
-            GridPane.setConstraints(selectedImage,position.x,position.y);
-            grid.getChildren().addAll(selectedImage);
-        }
-
+        };
+        myTimer.schedule(timerTask, 0, delay);
     }
 }

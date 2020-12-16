@@ -5,9 +5,9 @@ import java.util.Random;
 public class SimulationEngine {
     public final WorldMap worldMap;
 
-    public SimulationEngine(int width, int height, int startEnergy, int plantEnergy, double jungleRatio, int startAnimalNumber, int dayEnergyCost) {
+    public SimulationEngine(int width, int height, int startEnergy, int plantEnergy, int jungleRatio, int startAnimalNumber, int dayEnergyCost) {
 
-        worldMap = new WorldMap(width, height, dayEnergyCost,plantEnergy, jungleRatio);
+        worldMap = new WorldMap(width, height, dayEnergyCost,plantEnergy, jungleRatio, startEnergy);
         placeAnimals(startAnimalNumber,width,height,startEnergy);
     }
 

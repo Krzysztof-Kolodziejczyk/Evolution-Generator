@@ -1,6 +1,7 @@
 package sample;
 
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -10,14 +11,22 @@ public class Animal implements IMapElement {
     private Vector2d position;
     public int[] animalGene;
     public int energy;
+    public int startEnergy;
+    public int survivedDaysNumber;
+    public int childNumber;
+    private ArrayList<IPositionChangeObserver> positionChangeObservers;
 
 
-    // konstruktor do tworzenie zwierząt na początku uruchomienia aplikacji
+    // constructor to create firsts animals
     public Animal(WorldMap worldMap, Vector2d position, int energy) {
         this.worldMap = worldMap;
         this.position = position;
         animalGene = new int[32];
         this.energy = energy;
+        this.startEnergy = energy;
+        this.survivedDaysNumber = 1;
+        this.childNumber = 0;
+        positionChangeObservers = new ArrayList<>();
         Random rand = new Random();
         for(int i=0; i<32; i++)
         {
@@ -26,26 +35,16 @@ public class Animal implements IMapElement {
         Arrays.sort(animalGene);
     }
 
-    // konstruktor do sprawdzania wolnej pozycji na sąsiednich polach
-    public Animal(Vector2d position, int animalMovePrefer, WorldMap worldMap)
-    {
-        this.position = position;
-        this.animalGene = new int[32];
-        this.worldMap = worldMap;
-        for(int i=0; i<32; i++)
-        {
-            animalGene[i] = animalMovePrefer;
-        }
-    }
 
-
-    // konstrukor do tworzenia dziecka zwierzęcia
-    public Animal(Vector2d position, int energy, int[] animalGene, WorldMap worldMap)
+    // constructor to create animal`s child
+    public Animal(Vector2d position, int energy, int[] animalGene, WorldMap worldMap, int startEnergy)
     {
         this.position = position;
         this.energy = energy;
         this.animalGene = animalGene;
         this.worldMap = worldMap;
+        this.startEnergy = startEnergy;
+        this.positionChangeObservers = new ArrayList<>();
 
         Random rand = new Random();
         int direction = rand.nextInt(8);
@@ -84,45 +83,61 @@ public class Animal implements IMapElement {
         }
 
 
+        Vector2d oldPosition;
         switch (orientation) {
             case NORTH:
+                oldPosition = position;
                 if (position.y - 1 < 0) {
                     position = new Vector2d(position.x, worldMap.height - 1);
                 } else {
                     position = new Vector2d(position.x, (position.y - 1) % worldMap.height);
                 }
+                notifyObservers(oldPosition, position);
                 break;
             case NORTH_EAST:
+                oldPosition = position;
                 if (position.y - 1 < 0) {
                     position = new Vector2d((position.x + 1) % worldMap.width, worldMap.height - 1);
                 } else {
                     position = new Vector2d((position.x + 1) % worldMap.width, (position.y - 1) % worldMap.height);
                 }
+                notifyObservers(oldPosition, position);
                 break;
             case EAST:
+                oldPosition = position;
                 position = new Vector2d((position.x + 1) % worldMap.width, position.y);
+                notifyObservers(oldPosition, position);
                 break;
             case SOUTH_EAST:
+                oldPosition = position;
                 position = new Vector2d((position.x + 1) % worldMap.width, (position.y + 1) % worldMap.height);
+                notifyObservers(oldPosition, position);
                 break;
             case SOUTH:
+                oldPosition = position;
                 position = new Vector2d(position.x, (position.y + 1) % worldMap.height);
+                notifyObservers(oldPosition, position);
                 break;
             case SOUTH_WEST:
+                oldPosition = position;
                 if (position.x - 1 < 0) {
                     position = new Vector2d(worldMap.width - 1, (position.y + 1) % worldMap.height);
                 } else {
                     position = new Vector2d((position.x - 1) % worldMap.width, (position.y + 1) % worldMap.height);
                 }
+                notifyObservers(oldPosition, position);
                 break;
             case WEST:
+                oldPosition = position;
                 if (position.x - 1 < 0) {
                     position = new Vector2d(worldMap.width - 1, position.y);
                 } else {
                     position = new Vector2d((position.x - 1) % worldMap.width, position.y);
                 }
+                notifyObservers(oldPosition, position);
                 break;
             case NORTH_WEST:
+                oldPosition = position;
                 if (position.x - 1 < 0 && position.y - 1 >= 0) {
                     position = new Vector2d(worldMap.width - 1, (position.y - 1) % worldMap.height);
                 } else if (position.x - 1 >= 0 && (position.y - 1) < 0) {
@@ -132,7 +147,21 @@ public class Animal implements IMapElement {
                 } else {
                     position = new Vector2d((position.x - 1) % worldMap.width, (position.y - 1) % worldMap.height);
                 }
+                notifyObservers(oldPosition, position);
                 break;
+        }
+    }
+
+    public void addObserver(IPositionChangeObserver observer)
+    {
+        positionChangeObservers.add(observer);
+    }
+
+    private void notifyObservers(Vector2d oldPosition, Vector2d newPosition)
+    {
+        for(IPositionChangeObserver positionChangeObserver: positionChangeObservers)
+        {
+            positionChangeObserver.positionChanged(oldPosition, newPosition, this);
         }
     }
 
@@ -140,6 +169,10 @@ public class Animal implements IMapElement {
         return position;
     }
 
-
+    public int animalColor()
+    {
+        int color = 10*energy/startEnergy;
+        return Math.min(color, 9);
+    }
 
 }
