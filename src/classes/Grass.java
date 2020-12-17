@@ -1,4 +1,6 @@
-package sample;
+package classes;
+
+import interfaces.IMapElement;
 
 public class Grass implements IMapElement {
     private final Vector2d grassPosition;

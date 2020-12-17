@@ -1,6 +1,7 @@
-package sample;
+package visualisation;
 
 import javafx.scene.Scene;
+import javafx.scene.text.Font;
 import javafx.stage.Modality;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -17,11 +18,13 @@ public class AlertBox {
         window.setMinWidth(200);
         window.setMinHeight(200);
 
-        Label alertLabel = new Label("invalid Data");
+        Label alertLabel = new Label("Invalid Data");
+        alertLabel.setFont(new Font("Arial", 30));
         Button closeButton = new Button("close");
         closeButton.setOnAction(e->window.close());
 
         VBox mainLayout = new VBox();
+        mainLayout.setStyle("-fx-background-color: red");
         mainLayout.setAlignment(Pos.CENTER);
         mainLayout.setSpacing(40);
         mainLayout.getChildren().addAll(alertLabel, closeButton);

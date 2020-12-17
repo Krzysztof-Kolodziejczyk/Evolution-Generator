@@ -1,4 +1,4 @@
-package sample;
+package visualisation;
 
 public class Colors {
     public String[] animalColors;
@@ -17,6 +17,4 @@ public class Colors {
         animalColors[8] = "-fx-background-color: blueviolet";
         animalColors[9] = "-fx-background-color: darkviolet";
     }
-
-
 }

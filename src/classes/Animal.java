@@ -1,5 +1,9 @@
-package sample;
+package classes;
 
+
+import enumClasses.AnimalDirection;
+import interfaces.IMapElement;
+import interfaces.IPositionChangeObserver;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -7,14 +11,14 @@ import java.util.Random;
 
 public class Animal implements IMapElement {
     private AnimalDirection orientation = AnimalDirection.NORTH;
-    private WorldMap worldMap;
+    private final WorldMap worldMap;
     private Vector2d position;
     public int[] animalGene;
     public int energy;
     public int startEnergy;
     public int survivedDaysNumber;
     public int childNumber;
-    private ArrayList<IPositionChangeObserver> positionChangeObservers;
+    private final ArrayList<IPositionChangeObserver> positionChangeObservers;
 
 
     // constructor to create firsts animals
@@ -48,29 +52,14 @@ public class Animal implements IMapElement {
 
         Random rand = new Random();
         int direction = rand.nextInt(8);
-        switch (direction)
-        {
-            case 1:
-                orientation = AnimalDirection.NORTH_EAST;
-                break;
-            case 2:
-                orientation = AnimalDirection.EAST;
-                break;
-            case 3:
-                orientation = AnimalDirection.SOUTH_EAST;
-                break;
-            case 4:
-                orientation = AnimalDirection.SOUTH;
-                break;
-            case 5:
-                orientation = AnimalDirection.SOUTH_WEST;
-                break;
-            case 6:
-                orientation = AnimalDirection.WEST;
-                break;
-            case 7:
-                orientation = AnimalDirection.NORTH_WEST;
-                break;
+        switch (direction) {
+            case 1 -> orientation = AnimalDirection.NORTH_EAST;
+            case 2 -> orientation = AnimalDirection.EAST;
+            case 3 -> orientation = AnimalDirection.SOUTH_EAST;
+            case 4 -> orientation = AnimalDirection.SOUTH;
+            case 5 -> orientation = AnimalDirection.SOUTH_WEST;
+            case 6 -> orientation = AnimalDirection.WEST;
+            case 7 -> orientation = AnimalDirection.NORTH_WEST;
         }
     }
 
@@ -85,7 +74,7 @@ public class Animal implements IMapElement {
 
         Vector2d oldPosition;
         switch (orientation) {
-            case NORTH:
+            case NORTH -> {
                 oldPosition = position;
                 if (position.y - 1 < 0) {
                     position = new Vector2d(position.x, worldMap.height - 1);
@@ -93,8 +82,8 @@ public class Animal implements IMapElement {
                     position = new Vector2d(position.x, (position.y - 1) % worldMap.height);
                 }
                 notifyObservers(oldPosition, position);
-                break;
-            case NORTH_EAST:
+            }
+            case NORTH_EAST -> {
                 oldPosition = position;
                 if (position.y - 1 < 0) {
                     position = new Vector2d((position.x + 1) % worldMap.width, worldMap.height - 1);
@@ -102,23 +91,23 @@ public class Animal implements IMapElement {
                     position = new Vector2d((position.x + 1) % worldMap.width, (position.y - 1) % worldMap.height);
                 }
                 notifyObservers(oldPosition, position);
-                break;
-            case EAST:
+            }
+            case EAST -> {
                 oldPosition = position;
                 position = new Vector2d((position.x + 1) % worldMap.width, position.y);
                 notifyObservers(oldPosition, position);
-                break;
-            case SOUTH_EAST:
+            }
+            case SOUTH_EAST -> {
                 oldPosition = position;
                 position = new Vector2d((position.x + 1) % worldMap.width, (position.y + 1) % worldMap.height);
                 notifyObservers(oldPosition, position);
-                break;
-            case SOUTH:
+            }
+            case SOUTH -> {
                 oldPosition = position;
                 position = new Vector2d(position.x, (position.y + 1) % worldMap.height);
                 notifyObservers(oldPosition, position);
-                break;
-            case SOUTH_WEST:
+            }
+            case SOUTH_WEST -> {
                 oldPosition = position;
                 if (position.x - 1 < 0) {
                     position = new Vector2d(worldMap.width - 1, (position.y + 1) % worldMap.height);
@@ -126,8 +115,8 @@ public class Animal implements IMapElement {
                     position = new Vector2d((position.x - 1) % worldMap.width, (position.y + 1) % worldMap.height);
                 }
                 notifyObservers(oldPosition, position);
-                break;
-            case WEST:
+            }
+            case WEST -> {
                 oldPosition = position;
                 if (position.x - 1 < 0) {
                     position = new Vector2d(worldMap.width - 1, position.y);
@@ -135,8 +124,8 @@ public class Animal implements IMapElement {
                     position = new Vector2d((position.x - 1) % worldMap.width, position.y);
                 }
                 notifyObservers(oldPosition, position);
-                break;
-            case NORTH_WEST:
+            }
+            case NORTH_WEST -> {
                 oldPosition = position;
                 if (position.x - 1 < 0 && position.y - 1 >= 0) {
                     position = new Vector2d(worldMap.width - 1, (position.y - 1) % worldMap.height);
@@ -148,7 +137,7 @@ public class Animal implements IMapElement {
                     position = new Vector2d((position.x - 1) % worldMap.width, (position.y - 1) % worldMap.height);
                 }
                 notifyObservers(oldPosition, position);
-                break;
+            }
         }
     }
 

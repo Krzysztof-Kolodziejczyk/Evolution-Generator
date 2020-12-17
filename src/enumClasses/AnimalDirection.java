@@ -1,4 +1,4 @@
-package sample;
+package enumClasses;
 
 public enum AnimalDirection {
     NORTH,

@@ -1,4 +1,6 @@
-package sample;
+package interfaces;
+
+import classes.Vector2d;
 
 public interface IMapElement {
 

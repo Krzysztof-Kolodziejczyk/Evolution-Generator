@@ -1,5 +1,6 @@
-package sample;
+package visualisation;
 
+import classes.PaintUpdate;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -17,55 +18,65 @@ import java.util.TimerTask;
 
 public class MapVisualiser {
 
-    private final GridPane grid;
     private int currentDay = 0;
     private TimerTask timerTask;
-    private PaintUpdate paintUpdate;
-    private int delay;
+    private final PaintUpdate paintUpdate;
+    private final int delay;
 
-    public MapVisualiser(int width, int height, int delay, int startEnergy, int plantEnergy, int jungleRatio, int startAnimalNumber, int dayEnergyCost)
-    {
+    public MapVisualiser(int width, int height, int delay, int startEnergy, int plantEnergy, int jungleRatio, int startAnimalNumber, int dayEnergyCost) {
 
         Stage primaryStage = new Stage();
-        Button startButton = new Button("start Simulation");
-        Button stopButton = new Button("stop Simulation");
-        Button restartButton = new Button("Restart Simulation");
+
+        // buttons
+        Button startButton = new Button("start");
+        startButton.setFont(new Font("Arial", 20));
+        startButton.setStyle("-fx-background-color: green");
+        Button stopButton = new Button("stop");
+        stopButton.setStyle("-fx-background-color: red");
+        stopButton.setFont(new Font("Arial", 20));
+
+        // Labels
         Label dayNumberLabel = new Label("day 0");
         dayNumberLabel.setFont(new Font("Arial", 30));
-        Label animalArrayLength = new Label("animals 0");
-        Label grassArrayLength = new Label("grass number 0");
+        Label animalArrayLengthLabel = new Label("animals 0");
+        animalArrayLengthLabel.setFont(new Font(20));
+        Label grassArrayLengthLabel = new Label("grass number 0");
+        grassArrayLengthLabel.setFont(new Font(20));
         Label averageEnergyLevelLabel = new Label("average animal energy 0");
+        averageEnergyLevelLabel.setFont(new Font(20));
         Label averageAnimalLiveLengthLabel = new Label("average animal live length 0");
+        averageAnimalLiveLengthLabel.setFont(new Font(20));
         Label averageChildNumberLabel = new Label("average child number 0");
+        averageChildNumberLabel.setFont(new Font(20));
 
         this.delay = delay;
 
-        grid = new GridPane();
+        GridPane grid = new GridPane();
         paintUpdate = new PaintUpdate(width, height, grid, startEnergy, plantEnergy, jungleRatio, startAnimalNumber, dayEnergyCost);
         grid.setHgap(1);
         grid.setVgap(1);
         grid.setPadding(new Insets(15));
+
+        // main Layout
         BorderPane borderPane = new BorderPane();
         borderPane.setCenter(grid);
+        borderPane.setStyle("-fx-background-color:  darkslategray");
 
         // creating timer
         Timer myTimer = new Timer();
 
 
-        startButton.setOnAction(e ->
-        {
-            timerCycle(dayNumberLabel, animalArrayLength, grassArrayLength, averageEnergyLevelLabel, averageAnimalLiveLengthLabel, averageChildNumberLabel, myTimer);
-        });
+        startButton.setOnAction(e -> timerCycle(
+                dayNumberLabel,
+                animalArrayLengthLabel,
+                grassArrayLengthLabel,
+                averageEnergyLevelLabel,
+                averageAnimalLiveLengthLabel,
+                averageChildNumberLabel,
+                myTimer));
 
-        stopButton.setOnAction(e -> {
-            timerTask.cancel();
-        });
+        stopButton.setOnAction(e -> timerTask.cancel());
 
-        restartButton.setOnAction(e ->
-        {
-            paintUpdate = new PaintUpdate(width,height,grid, startEnergy, plantEnergy, jungleRatio, startAnimalNumber, dayEnergyCost);
-            currentDay = 0;
-        });
 
         // top Panel to render day number
         VBox vBoxTop = new VBox();
@@ -75,19 +86,21 @@ public class MapVisualiser {
         vBoxTop.getChildren().addAll(dayNumberLabel);
         borderPane.setTop(vBoxTop);
 
-        // left Panel to change Days
+        // left Panel to start and stop
         VBox vBoxLeft = new VBox();
-        vBoxLeft.setPrefWidth(200);
+        vBoxLeft.setSpacing(20);
+        vBoxLeft.setPrefWidth(80);
         vBoxLeft.setAlignment(Pos.TOP_CENTER);
-        vBoxLeft.getChildren().addAll(startButton, stopButton, restartButton);
+        vBoxLeft.getChildren().addAll(startButton, stopButton);
         borderPane.setLeft(vBoxLeft);
 
 
         // right Panel to render Statistics
         VBox vBoxRight = new VBox();
-        vBoxRight.setPrefWidth(200);
+        vBoxLeft.setSpacing(20);
+        vBoxRight.setPrefWidth(300);
         vBoxRight.setAlignment(Pos.TOP_CENTER);
-        vBoxRight.getChildren().addAll(animalArrayLength, grassArrayLength, averageAnimalLiveLengthLabel, averageChildNumberLabel, averageEnergyLevelLabel);
+        vBoxRight.getChildren().addAll(animalArrayLengthLabel, grassArrayLengthLabel, averageAnimalLiveLengthLabel, averageChildNumberLabel, averageEnergyLevelLabel);
         borderPane.setRight(vBoxRight);
 
         Scene scene = new Scene(borderPane);
