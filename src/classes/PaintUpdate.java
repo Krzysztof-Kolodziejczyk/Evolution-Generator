@@ -5,7 +5,7 @@ import javafx.scene.layout.GridPane;
 import visualisation.Colors;
 
 
-public class PaintUpdate {
+public class PaintUpdate {  // GUI wymieszane z logiką aplikacji
 
     private final int width;
     private final int height;
@@ -61,7 +61,7 @@ public class PaintUpdate {
             animalLabel = new Label();
             try {
                 animalLabel.setStyle(colors.animalColors[simulationEngine.worldMap.getMaximumEnergyAnimal(position).animalColor()]);
-            } catch (Exception ex) {
+            } catch (Exception ex) {    // wszystkie wyjątki do jednego worka
                 animalLabel.setStyle("-fx-background-color: olive");
             }
             animalLabel.setMinSize(blockSize, blockSize);
@@ -72,7 +72,7 @@ public class PaintUpdate {
         }
     }
 
-    private double sizeCounter() {
+    private double sizeCounter() {  // polecam nazwy metod, które brzmią jak polecenia
         double x = (double) 400 / width;
         double y = (double) 400 / height;
 

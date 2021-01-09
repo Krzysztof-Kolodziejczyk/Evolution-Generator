@@ -7,7 +7,7 @@ import java.util.*;
 public class WorldMap implements IPositionChangeObserver {
 
     public final int height, width;
-    public HashMap<Vector2d, ArrayList<Animal>> animalsOnMap;
+    public HashMap<Vector2d, ArrayList<Animal>> animalsOnMap;   // public?
     public ArrayList<Vector2d> animalsPositions;
     public HashMap<Vector2d, Grass> grassesOnMap;
     public ArrayList<Vector2d> eatenGrasses;
@@ -84,13 +84,13 @@ public class WorldMap implements IPositionChangeObserver {
         }
     }
 
-    public void dayCycle() {
+    public void dayCycle() {    // czy to jest odpowiedzialność mapy?
         addedGrasses = new ArrayList<>();
         placeGrasses();
 
         //przejście po wszystkich zwierzętach i weryfikacja zdarzeń (jedzenie, rozmnażanie, śmierć)
         eatenGrasses = new ArrayList<>();
-        ArrayList<Vector2d> newAnimalsPositions = new ArrayList<>(animalsPositions);
+        ArrayList<Vector2d> newAnimalsPositions = new ArrayList<>(animalsPositions);    // czemu new?
 
         for (Vector2d position : newAnimalsPositions) {
             eat(position);
@@ -141,7 +141,7 @@ public class WorldMap implements IPositionChangeObserver {
 
     // na jedym polu może być maksymalnie jedna trawa i int zwierząt
     private void eat(Vector2d position) {
-        Animal strongestAnimal = getMaximumEnergyAnimal(position);
+        Animal strongestAnimal = getMaximumEnergyAnimal(position);  // a jeśli kilka zwierząt ma równą energię?
         Grass grass = grassesOnMap.get(position);
 
         if (strongestAnimal != null && grass != null) {
@@ -242,7 +242,7 @@ public class WorldMap implements IPositionChangeObserver {
 
     }
 
-    private Vector2d findPlaceForChild(Vector2d parentPosition) {
+    private Vector2d findPlaceForChild(Vector2d parentPosition) {   // długa ta metoda
         // 1) x, y+1
         Vector2d newPosition;
         if (animalsOnMap.get(new Vector2d(parentPosition.x, (parentPosition.y + 1) % height)) == null) {

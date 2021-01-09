@@ -1,7 +1,7 @@
 package visualisation;
 
 public class Colors {
-    public String[] animalColors;
+    public String[] animalColors;   // czemu nie static?
 
     public Colors()
     {

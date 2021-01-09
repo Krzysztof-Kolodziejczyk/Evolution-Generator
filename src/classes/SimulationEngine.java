@@ -2,7 +2,7 @@ package classes;
 
 import java.util.Random;
 
-public class SimulationEngine {
+public class SimulationEngine { // ta klasa trochę za mało robi, żeby zasługiwać na taką nazwę
     public final WorldMap worldMap;
 
     public SimulationEngine(int width, int height, int startEnergy, int plantEnergy, int jungleRatio, int startAnimalNumber, int dayEnergyCost) {

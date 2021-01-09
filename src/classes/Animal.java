@@ -1,4 +1,4 @@
-package classes;
+package classes;    // 5 niezależnych pakietów, bez żadnego nadrzędnego
 
 
 import enumClasses.AnimalDirection;
@@ -14,7 +14,7 @@ public class Animal implements IMapElement {
     private final WorldMap worldMap;
     private Vector2d position;
     public int[] animalGene;
-    public int energy;
+    public int energy;  // public?
     public int startEnergy;
     public int survivedDaysNumber;
     public int childNumber;
@@ -36,7 +36,7 @@ public class Animal implements IMapElement {
         {
             animalGene[i] = rand.nextInt(32) % 8;
         }
-        Arrays.sort(animalGene);
+        Arrays.sort(animalGene);    // geny mogą być niepoprawne
     }
 
 
@@ -45,7 +45,7 @@ public class Animal implements IMapElement {
     {
         this.position = position;
         this.energy = energy;
-        this.animalGene = animalGene;
+        this.animalGene = animalGene;   // wierzymy na słowo, że są poprawne?
         this.worldMap = worldMap;
         this.startEnergy = startEnergy;
         this.positionChangeObservers = new ArrayList<>();
@@ -53,7 +53,7 @@ public class Animal implements IMapElement {
         Random rand = new Random();
         int direction = rand.nextInt(8);
         switch (direction) {
-            case 1 -> orientation = AnimalDirection.NORTH_EAST;
+            case 1 -> orientation = AnimalDirection.NORTH_EAST; // vide: AnimalDirection.values()
             case 2 -> orientation = AnimalDirection.EAST;
             case 3 -> orientation = AnimalDirection.SOUTH_EAST;
             case 4 -> orientation = AnimalDirection.SOUTH;
@@ -65,15 +65,15 @@ public class Animal implements IMapElement {
 
 
     public void move() {
-        Random rand = new Random();
-        int bound = animalGene[rand.nextInt(8)];
+        Random rand = new Random(); // nowy obiekt co wywołanie
+        int bound = animalGene[rand.nextInt(8)];    // czemu 8, a nie 32?
         for (int i = 0; i < bound; i++) {
             orientation = orientation.next(orientation);
         }
 
 
         Vector2d oldPosition;
-        switch (orientation) {
+        switch (orientation) {  // nie da się skrócić tego switcha?
             case NORTH -> {
                 oldPosition = position;
                 if (position.y - 1 < 0) {
@@ -158,7 +158,7 @@ public class Animal implements IMapElement {
         return position;
     }
 
-    public int animalColor()
+    public int animalColor()    // to jest element GUI, nie logiki aplikacji
     {
         int color = 10*energy/startEnergy;
         return Math.min(color, 9);

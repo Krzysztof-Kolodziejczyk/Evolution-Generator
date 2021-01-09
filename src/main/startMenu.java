@@ -13,7 +13,7 @@ import visualisation.AlertBox;
 import visualisation.MapVisualiser;
 
 
-public class startMenu extends Application{
+public class startMenu extends Application{ // nazwy klas raczej PascalCase
 
 
     MapVisualiser mapVisualiser;
@@ -33,12 +33,12 @@ public class startMenu extends Application{
     private int width;
     private int height;
     private int delay;
-    private int startEnergy;
+    private int startEnergy;    // czy to na pewno cechy menu?
     private int plantEnergy;
     private int jungleRatio;
     private int startAnimalNumber;
     private int dayEnergyCost;
-    private final RuntimeException runtimeException = new RuntimeException();
+    private final RuntimeException runtimeException = new RuntimeException();   // przygotowuje Pan wyjątek na zapas?
 
     public static void main(String[] args) {
         launch(args);
@@ -83,7 +83,7 @@ public class startMenu extends Application{
                 checkData(dayEnergyCost);
 
                 mapVisualiser = new MapVisualiser(width,height,delay,startEnergy, plantEnergy, jungleRatio, startAnimalNumber, dayEnergyCost);
-            }catch (Exception ex)
+            }catch (Exception ex)   // wszystkie wyjątki do jednego worka?
             {
                 alertBox = new AlertBox();
             }
